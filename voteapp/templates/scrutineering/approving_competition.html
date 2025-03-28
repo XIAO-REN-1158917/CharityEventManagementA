@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block title%}Approving competition{%endblock%}
+
+{% block content%}
+<h2 class="text-center mb-3">Approving competition</h2>
+{% for message in get_flashed_messages() %}
+<div class="alert alert-info mt-3">
+    {{ message }}
+</div>
+{% endfor %}  
+<div class="container-fluid">
+<table class="table table-bordered table-striped">
+    <thead>
+        <th>Status</th>
+        <th>Competition</th>
+        <th>Voting start date</th>
+        <th>Voting end date</th>
+        <th>Action</th>
+    </thead>
+    <tbody>
+        {%for competition in competition_list%}
+        <tr>
+            <td>{{competition.status.value}}</td>
+            <td>{{competition.name}}</td>
+            <td>{{competition.voting_start_date}}</td>
+            <td>{{competition.voting_end_date}}</td>        
+            <td data-id="{{competition.id}}"><a href="#" class="approve_btn btn btn-primary">Approve</a></td>
+        </tr>            
+        {%endfor%}
+    </tbody>
+</table>
+<form action="{{url_for('approving_competition')}}" method="post" id="approve_form">
+    <input type="hidden" name="competition_id" id="approve_id">
+</form>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function(){
+        $(".approve_btn").click(function(){
+            var isConfirmed = confirm("Are you sure you want to approve this competition?")
+            if (isConfirmed) {
+                var id = $(this).closest("td").data("id");
+                $("#approve_id").val(id);
+                $("#approve_form").submit();
+            }
+        });        
+    });
+</script>
+</div>
+{%endblock%}

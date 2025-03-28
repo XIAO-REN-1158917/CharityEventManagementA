@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block title %}Competitor Details{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center my-4">Competitor Details</h1>
+    <div class="competitor-details card p-4 mb-4 shadow-sm">
+        <div class="text-center">
+            <img src="{{ url_for('static', filename='img/' ~ competitor.image) }}" alt="{{ competitor.name }}" 
+                 class="img-fluid mb-3" style="max-width: 100%; width: 30vw; height: auto;">
+            <h2>{{ competitor.name }}</h2>
+            <p class="lead">{{ competitor.description }}</p>
+        </div>
+    </div>
+    <!-- Go Vote -->
+    {% if not has_voted %}
+    <div class="text-center">
+        <button type="button" class="btn btn-primary btn-lg" style="width: 200px;" data-bs-toggle="modal" data-bs-target="#voteConfirmModal">
+            Vote
+        </button>
+    </div>
+    {% endif %}
+    <div class="text-center mt-4">
+        <form action="{{ url_for('back') }}" method="POST">
+            <button type="submit" class="btn btn-secondary" style="width: 200px;">Back</button>
+        </form>
+    </div>
+</div>
+<div class="modal fade" id="voteConfirmModal" tabindex="-1" aria-labelledby="voteConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header justify-content-center">
+        <h5 class="modal-title text-center" id="voteConfirmModalLabel">Confirm Your Vote</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        Are you sure you want to vote for {{ competitor.name }}?
+        <p class="text-muted small mt-2">(You can only vote for one competitor.)</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary" style="width: 200px;" data-bs-dismiss="modal">Cancel</button>
+        <form action="{{ url_for('vote') }}" method="POST" id="voteForm">
+            <button type="submit" class="btn btn-primary" style="width: 200px;">Confirm</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

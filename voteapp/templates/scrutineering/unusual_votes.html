@@ -1,0 +1,137 @@
+{% extends "layout.html" %}
+
+{% block title %}List of Votes{% endblock%}
+
+{% block content %}
+<h2 class="text-center mb-3">List of Votes</h2>
+<div class="container-fluid">
+    <form action="{{url_for('unusual_votes')}}" method="POST">
+        <div class="row">
+            <div class="col-md-3">
+                <label class="form-label" for="competition_name">Competition:</label>
+                <select class="form-select" name="competition_id">
+                    <option value="" >all</option>
+                    {%for competition in competition_list %}
+                    {% if competition_id %}
+                        {% set competition_id = competition_id | int %}      
+                    {%endif%}
+                    <option value="{{competition.id}}" {% if competition.id == competition_id %} selected {%endif%} >[{{competition.competition_status}}] {{competition.competition_name}}</option>
+                    {%endfor%}
+                </select>
+            </div>            
+            <div class="col-md-3">
+                <label class="form-label" for="ip">Voter IP address:</label>
+                <input class="form-control" type="text" name="ip" value="{{ip}}" >
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <button type="submit" class="btn btn-primary">Search</button>
+                {% if message!="initial_entry" and message!="no_data" %}
+                <button type="button" class="btn btn-danger" id="makeAllInvalid">Mark All as Invalid</button>    
+                {%endif%}            
+            </div>
+        </div>
+    </form>
+</div>
+
+{% if message=="initial_entry" %}
+<div class="px-4 pt-5 my-5 text-center">
+    <div class="col-lg-6 mx-auto">
+        <p class="lead mb-4">Please enter your search criteria above and click the "Search" button to begin.</p>
+    </div>
+</div>
+{% elif message=="no_data" %}
+<div class="px-4 pt-5 my-5 text-center">
+    <div class="col-lg-6 mx-auto">
+        <p class="lead mb-4">Sorry, we couldn't find any results matching your search criteria.</p>
+    </div>
+</div>
+{% else %}  
+
+<div class="container-fluid mt-3">
+    <table class="table table-striped table-bordered" id="myTable">
+        <thead class="text-center">
+            <tr>
+                <th>Status</th>
+                <th>Competition</th>
+                <th>Competitor</th>                
+                <th>Voter</th>
+                <th>Voting time</th>
+                <th>Voting IP</th>
+                <th>Vote status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vote in votes %}
+            <tr data-id="{{vote.vote_id}}">
+                <td>{{vote.status}}</td>
+                <td>{{vote.competition_name}}</td>
+                <td>{{vote.competitor_name}}</td>                
+                <td>{{vote.voter}}</td>
+                <td>{{vote.voting_time}}</td>
+                <td>{{vote.voting_ip}}</td>
+                <td class="vote_status">{{vote.vote_status}}</td>
+                <td>
+                    {% if vote.vote_status == 'valid'%}
+                        <a href="#" class="invalidate_btn btn btn-primary">Invalidate</a>
+                    {%endif%}
+                </td>
+            </tr>
+            {%endfor%}
+        </tbody>
+    </table>
+</div>
+
+{%endif%}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function(){
+        $(".invalidate_btn").click(function(){
+            var rowId = $(this).closest("tr").data("id");
+            sendAjaxRequest([rowId]);
+        });
+
+        $("#makeAllInvalid").click(function(){
+            var allIds = [];
+            $("#myTable tr").each(function(){
+                var rowId = $(this).data("id");
+                if(rowId) {
+                    allIds.push(rowId)
+                }
+            });
+            sendAjaxRequest(allIds)
+        });
+        
+        function sendAjaxRequest(ids){
+            var isConfirmed = confirm('Are you sure you want to invalidate?');
+            if(isConfirmed) {
+                var scrollTop = $(window).scrollTop(); 
+                $.ajax({
+                    url:"/invalidate",
+                    type:"post",
+                    contentType:"application/json",
+                    data:JSON.stringify({"ids":ids}),
+                    success: function(response) {
+                        ids.forEach(element => {
+                            var $td1 = $('tr[data-id="'+element+'"] td').eq(6);
+                            var $td2 = $('tr[data-id="'+element+'"] td').eq(7);
+                            $td1.text("invalid");
+                            $td2.text("");
+                        });
+                        $(window).scrollTop(scrollTop);
+                    },
+                    error:function(xhr, status, error){
+                        alert('Request failed: ' + error);
+                    }
+                });
+            }
+
+        }
+    });
+</script>
+
+{% endblock %}

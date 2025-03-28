@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+
+{% block title %}Update Profile{% endblock %}
+
+{% block content %}
+<div class="container text-center">
+    <h2>Update Your Profile</h2>
+
+    <!-- Display flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert alert-info">
+                {% for category, message in messages %}
+                    <p class="mb-0">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Profile Image Update Form -->
+    <form id="uploadForm" method="POST" action="{{ url_for('update_profile') }}" enctype="multipart/form-data" class="mb-4">
+        <div class="d-flex flex-column align-items-center justify-content-center">
+            {% if user.avatar and user.avatar != 'default.png' %}
+                <div class="d-flex align-items-center">
+                    <img src="{{ url_for('static', filename='img/' ~ user.avatar) }}" alt="Avatar" class="rounded-circle" width="100" height="100">
+                    <div class="d-flex flex-column ms-3">
+                        <div class="mb-2">
+                            <input type="file" class="form-control-file" name="profile_image" id="profile_image" accept="image/*">
+                        </div>
+                        <div class="d-flex">
+                            <button type="submit" class="btn btn-primary me-2">Update Image</button>
+    </form>
+    <!-- Form to delete profile image -->
+    <form method="POST" action="{{ url_for('delete_profile_image') }}" class="mb-0">
+        <button type="submit" class="btn btn-danger">Delete Image</button>
+    </form>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="d-flex flex-column align-items-center">
+                    <input type="file" class="form-control-file" name="profile_image" id="profile_image" accept="image/*">
+                    <button type="submit" class="btn btn-primary mt-2">Upload Image</button>
+                </div>
+            {% endif %}
+        </div>
+    </form>
+
+    <!-- Profile Details Update Form (Table Layout) -->
+    <form method="POST" action="{{ url_for('update_profile') }}" class="text-left">
+        <table class="table table-bordered mx-auto" style="width: 60%;">
+            <tbody>
+                <tr>
+                    <td><label for="email">Email<span style="color: red;">*</span></label></td>
+                    <td><input type="email" class="form-control" name="email" value="{{ user.email }}" required></td>
+                </tr>
+                <tr>
+                    <td><label for="first_name">First Name<span style="color: red;">*</span></label></td>
+                    <td><input type="text" class="form-control" name="first_name" value="{{ user.first_name or '' }}"></td>
+                </tr>
+                <tr>
+                    <td><label for="last_name">Last Name<span style="color: red;">*</span></label></td>
+                    <td><input type="text" class="form-control" name="last_name" value="{{ user.last_name or '' }}"></td>
+                </tr>
+                <tr>
+                    <td><label for="description">Description</label></td>
+                    <td><input type="text" class="form-control" name="description" value="{{ user.description or '' }}"></td>
+                </tr>
+                <tr>
+                    <td><label for="location">Location<span style="color: red;">*</span></label></td>
+                    <td><input type="text" class="form-control" name="location" value="{{ user.location or '' }}"></td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="text-center">
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </form>
+</div>
+{% endblock %}
+
+<script>
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        var fileInput = document.getElementById('profile_image');
+        var file = fileInput.files[0];
+
+        // Set the max size in bytes (e.g., 2MB = 2 * 1024 * 1024 bytes)
+        var maxSize = 2 * 1024 * 1024;
+
+        if (file.size > maxSize) {
+            alert("The file size exceeds the 2MB limit.");
+            e.preventDefault(); // Prevent the form from submitting
+        }
+    });
+</script>

@@ -1,0 +1,149 @@
+{% extends "layout.html" %}
+
+{% block title %}Competition Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="text-center">Competition Management</h2>
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-info mt-3">
+        {{ message }}
+    </div>
+    {% endfor %}   
+    <!-- Query condition section -->
+    <form action="{{ url_for('competition_setup') }}" method="POST">
+        <div class="row mt-3">
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status:</label>
+                <select name="status" class="form-select">
+                    <option value="all" {% if status == "" %}selected{% endif %}></option>                    
+                    <option value="all" {% if status == "all" %}selected{% endif %}>All</option>                    
+                    <option value="pending" {% if status == "pending" %}selected{% endif %}>Pending</option>
+                    <option value="ongoing" {% if status == "ongoing" %}selected{% endif %}>Ongoing</option>
+                    <option value="ended" {% if status == "ended" %}selected{% endif %}>Ended</option>
+                    <option value="published" {% if status == "published" %}selected{% endif %}>Published</option>
+                </select>
+            </div>         
+        </div>
+        <!-- Actions button -->
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <button type="submit" class="btn btn-primary">Search</button>
+                <a href="{{ url_for('competition_add') }}" class="btn btn-secondary">Add</a>
+            </div>         
+        </div>
+    </form>
+    <!-- Competition List -->
+    <!-- Competition List -->
+    {% if message=="initial_entry" %}
+    <div class="px-4 pt-5 my-5 text-center">
+        <div class="col-lg-6 mx-auto">
+            <p class="lead mb-4">Please enter your search criteria above and click the "Search" button to begin.</p>
+        </div>
+    </div>
+    {% elif message=="no_data" %}
+    <div class="px-4 pt-5 my-5 text-center">
+        <div class="col-lg-6 mx-auto">
+            <p class="lead mb-4">Sorry, we couldn't find any results matching your search criteria.</p>
+        </div>
+    </div>
+    {% else %}     
+    <div class="row mt-3">
+        <div class="col-md-12">   
+            <table class="table table-striped table-bordered">                             
+                <thead>
+                    <tr>                    
+                        <th style="width:30%;">Competition name</th>
+                        <th>Start date</th>                    
+                        <th>End date</th>
+                        <th>Status</th>
+                        <th class="col-1">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                        {% for competition in competition_list %}
+                        <tr>                           
+                            <td>{{ competition.name }}</td>
+                            <td>{{ competition.voting_start_date }}</td>
+                            <td>{{ competition.voting_end_date }}</td>
+                            <td>{{ competition.status.value }}</td>                         
+                            <td>
+                                <div class="d-flex">
+                                    <a href="{{ url_for('spot_pick', competition_id=competition.id, competition_name=competition.name) }}" class="btn btn-primary px-1 me-1">Competitors</a>
+                                    {% if competition.status.value == "pending" %}
+                                    <a href="{{ url_for('competition_edit', id=competition.id) }}" class="btn btn-primary px-1 me-1">Edit</a>
+                                    <a href="#" class="btn btn-primary px-1 launch-btn me-1" data-id="{{ competition.id }}">Launch</a>
+                                    <a href="#" class="btn btn-danger px-1 delete-btn me-1" data-id="{{ competition.id }}">Delete</a> 
+                                    {% endif %}
+                                </div>
+                            </td>                            
+                        </tr>
+                        {% endfor %}                    
+                </tbody>
+            </table>        
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('.delete-btn').on('click', function(event) {
+            event.preventDefault();
+            var $this = $(this);
+            var id = $this.data('id');
+
+            // Confirm deletion
+            if (confirm('Are you sure you want to delete this competition?')) {
+                $.ajax({
+                    url: '/competition_delete', // Replace with your actual delete URL
+                    method: 'POST',
+                    data: { id: id },
+                    success: function(response) {
+                        $this.closest('tr').remove(); // Remove the row from the table
+                    },
+                    error: function() {
+                        alert('Error deleting competition');
+                    }
+                });
+            }
+        });
+
+        $('.launch-btn').on('click', function(event) {
+            event.preventDefault();
+            var $this = $(this);
+            var $row = $this.closest('tr'); 
+            var id = $this.data('id');
+
+            // Confirm launch
+            if (confirm('Are you sure you want to launch this competition?')) {
+                $.ajax({
+                    url: '/competition_launch', // Replace with your actual delete URL
+                    method: 'POST',
+                    data: { id: id },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            $row.find('td').eq(4).text('ongoing');
+                            alert(response.message);
+                        } else {
+                            alert('Error: ' + response.message);
+                        }                                                
+                    },
+                    error: function(xhr) {
+                        var errorMessage = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Error launching competition';
+                        alert(errorMessage);
+                    }
+                });
+            }
+        });        
+    });
+</script>
+{% endblock %}
+
+
+
+

@@ -1,0 +1,235 @@
+{% extends "layout.html" %}
+
+{% block title %}Home Page{% endblock %}
+
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+    .hero-image {
+        width: 100%;
+        height: 500px; 
+        background: url('{{ url_for("static", filename="img/homepage.jpg") }}') no-repeat center center;
+        background-size: cover;
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        margin: 0 auto; 
+    }
+    .hero-image h2 {
+        color: #fff;
+        font-size: 2em;
+        background: rgba(0, 0, 0, 0);
+        padding: 10px;
+        border-radius: 5px;
+        margin: 0 20px 20px; 
+    }
+    .features {
+        display: flex;
+        justify-content: space-between; /* Adjust spacing between features */
+        flex-wrap: wrap; 
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    .feature {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 20px;
+        width: 45%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px; 
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .feature {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 20px;
+        width: 45%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px; 
+    }
+    .feature img {
+        width: 29%;
+        height: auto;
+        border-radius: 5px;
+    }
+    .feature h3 {
+        margin-top: 10px;
+        font-size: 1.5em;
+        color: #020b0a; 
+    }
+    .feature .crown {
+        font-size: 2em;
+        color: gold;
+    }
+.countdown-box {
+    border: 10px solid #007bff;
+    border-radius: 12px; 
+    padding: 15px; 
+    display: flex;
+    justify-content: space-around;
+    width: fit-content;
+    margin: 0 auto; 
+    background: linear-gradient(135deg, #e0e0e0, #ffffff); 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+}
+.time-unit {
+    text-align: center;
+    margin: 0 15px;
+    font-size: 28px; 
+    font-weight: 600; 
+    color: #333; 
+    transition: transform 0.3s;
+}    
+.time-unit:hover {
+    transform: scale(1.1);
+    color: #007bff; 
+}
+#countdown {
+    font-family: 'Roboto', sans-serif; 
+    font-size: 16px; 
+    color: #333; 
+}
+#countdown {
+        font-family: 'Roboto', sans-serif; 
+        font-size: 20px; /* Adjust font size */
+        color: #333; 
+    }
+
+    @media (max-width: 768px) {
+        .hero-image h2 {
+            font-size: 1.5em;
+        }
+        .feature {
+            width: 100%;
+            max-width: 100%;
+        }
+        .feature img {
+            width: 90%;
+        }
+        .countdown-box {
+            flex-direction: column;
+            width: 100%;
+        }
+        .time-unit {
+            margin: 10px 0;
+            font-size: 18px;
+        }
+    }
+</style>
+</head>
+<body>
+
+    <div class="hero-image">
+        <h2>The Surfing Spot of the Year in NZ</h2>
+    </div>
+
+    <div class="features">
+        <!-- Recent Champion Spot -->
+        <div class="feature">
+
+            <h4>The most recent Champion from: 
+                <a href="{{ url_for('competition_results') }}">
+                <p style="font-weight: bold; font-size: 20px;">{{ latest_game_name }}</p></h4>
+            <a href="{{ url_for('competition_results') }}">
+                {% if champion_image %}
+                    <img src="{{ url_for('static', filename='img/' + champion_image) }}" alt="Recent Champion Spot">
+                {% else %}
+                    <img src="{{ url_for('static', filename='img/default.png') }}" alt="Recent Champion Spot">
+                {% endif %}
+            </a>
+            {% if champion_name %}
+            <div>
+                <i class="fa-solid fa-crown" style="font-size: 24px; color: gold; vertical-align: middle;"></i>
+                <span style="font-weight: bold; font-size: 24px; vertical-align: middle;">{{ champion_name }}</span>
+            </div>
+            {% else %}
+                <p>No recent champion available</p>
+            {% endif %}
+        </div>
+
+        <!-- Current Voting Topic -->
+        <div class="feature">
+            <h4>Opening Voting:</h4>
+            <a href="{{ url_for('current_voting') }}">
+                <p style="font-weight: bold; font-size: 20px;">{{ ongoing_competition_name }}</p>
+            </a>
+            <p>
+                <span style="font-weight: bold; font-size: 20px;">From:</span>
+                <span style="font-weight: bold; font-size: 20px;">{{ ongoing_voting_start_date }}</span>
+                <span style="font-weight: bold; font-size: 20px;">To:</span>
+                <span style="font-weight: bold; font-size: 20px;">{{ ongoing_voting_end_date }}</span>
+            </p>
+            <p>
+                <div id="countdown" class="countdown-box">
+                    <div class="time-unit">
+                        <span id="days">00</span><br>Days
+                    </div>
+                    <div class="time-unit">
+                        <span id="hours">00</span><br>Hours
+                    </div>
+                    <div class="time-unit">
+                        <span id="minutes">00</span><br>Minutes
+                    </div>
+                    <div class="time-unit">
+                        <span id="seconds">00</span><br>Seconds
+                    </div>
+                </div>
+                </span>
+            </p>                
+        </div>
+    </div>
+</body>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function updateCountdown(endDate) {
+        const now = new Date().getTime();
+        const distance = endDate - now;
+
+        if (distance < 0) {
+            document.getElementById('countdown').innerHTML = "EXPIRED";
+            return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        document.getElementById('countdown').innerHTML = `
+            <span class="countdown-item">
+                <span class="countdown-number" style="color: #007bff;">${days}</span> <span class="countdown-text">Days</span>
+            </span>
+            <span class="countdown-item">
+                <span class="countdown-number" style="color: #007bff;">${hours}</span> <span class="countdown-text">Hours</span>
+            </span>
+            <span class="countdown-item">
+                <span class="countdown-number" style="color: #007bff;">${minutes}</span> <span class="countdown-text">Min</span>
+            </span>
+            <span class="countdown-item">
+                <span class="countdown-number" style="color: #007bff;">${seconds}</span> <span class="countdown-text">Sec</span>
+            </span>
+        `;
+    }
+
+    const endDateString = "{{ ongoing_voting_end_date_2 }}";
+    const [day, month, year] = endDateString.split('/');
+    const endDate = new Date(`${year}-${month}-${day}T23:59:59`);
+
+    updateCountdown(endDate);
+
+    setInterval(function() {
+        updateCountdown(endDate);
+    }, 1000);
+});
+</script>
+    
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "layout.html" %}
+
+{% block title %}Surfing Spot Pickup{% endblock %}
+
+{% block content %}
+<body>
+    <div class="container mt-5">
+        <h2>Surfing Spot Pickup for <span id="competition_name">{{ competition_name }}</span></h2> 
+        {% for message in get_flashed_messages() %}
+        <div class="alert alert-info mt-3">
+            {{ message }}
+        </div>
+        {% endfor %} 
+
+        {% if competition_status == 'pending' %}
+        <!-- Competitors Table -->
+        <form method="post" action="{{ url_for('spot_pick', competition_name=competition_name) }}">
+            <table class="table table-bordered mt-5">
+                <thead>
+                    <tr>                        
+                        <th>Competitor Name</th>
+                        <th>Description</th>
+                        <th>Image</th>
+                        <th>Selection</th>                        
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for competitor in competitors %}
+                        <tr>                                          
+                            <td>{{ competitor.name }}</td>
+                            <td>{{ competitor.description }}</td>
+                            <td><img src="{{ url_for('static', filename='img/' + competitor.image) }}" alt="{{ competitor.name }}" width="40"></td>
+                            <td class="text-center">
+                                <!-- Show Remove button if the competitor is already in the competition -->
+                                <button type="button" class="btn btn-danger  {{ 'd-none' if competitor.id not in existing_competitor_ids else '' }}" 
+                                        onclick="toggleSelection(this, '{{ competitor.id }}', 'remove')"
+                                        data-selected="true">
+                                    Remove
+                                </button>
+
+                                <!-- Show Select button if the competitor is not in the competition -->
+                                <button type="button" class="btn btn-primary  {{ '' if competitor.id not in existing_competitor_ids else 'd-none' }}" 
+                                        onclick="toggleSelection(this, '{{ competitor.id }}', 'add')"
+                                        data-selected="false">
+                                    Select
+                                </button>
+
+                                <input type="hidden" name="selected_competitor_ids[]" value="" id="competitor-id-{{ competitor.id }}">
+                                <input type="hidden" name="action_{{ competitor.id }}" value="" id="action-id-{{ competitor.id }}">
+                            </td>                              
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <a href="{{ url_for('competition_setup') }}" class="btn btn-secondary">Back</a>
+        </form>
+        {% else %}
+        <!-- Display existing competitors only if not 'pending' -->
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Competitor Name</th>
+                    <th>Description</th>
+                    <th>Image</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for competitor in competitors %}
+                    {% if competitor.id in existing_competitor_ids %}
+                        <tr>
+                            <td>{{ competitor.name }}</td>
+                            <td>{{ competitor.description }}</td>
+                            <td><img src="{{ url_for('static', filename='img/' + competitor.image) }}" alt="{{ competitor.name }}" width="40"></td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+    
+    <script>
+    function toggleSelection(element, competitorId, action) {
+        const competitorIdInput = document.getElementById('competitor-id-' + competitorId);
+        const actionInput = document.getElementById('action-id-' + competitorId);
+
+        // Toggle visibility of buttons
+        const isAdding = action === 'add';
+        const selectButton = element.closest('td').querySelector('.btn-primary');
+        const removeButton = element.closest('td').querySelector('.btn-danger');
+
+        if (isAdding) {
+            // Hide Select button, show Remove button
+            selectButton.classList.add('d-none');
+            removeButton.classList.remove('d-none');
+            competitorIdInput.value = competitorId;
+            actionInput.value = 'add';
+        } else {
+            // Hide Remove button, show Select button
+            removeButton.classList.add('d-none');
+            selectButton.classList.remove('d-none');
+            competitorIdInput.value = competitorId;
+            actionInput.value = 'remove';
+        }
+    }
+    </script>
+{% endblock %}
+
+
+
+
+
+
+
+
+

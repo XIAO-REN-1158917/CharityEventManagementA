@@ -1,0 +1,148 @@
+{% extends "layout.html" %} {% block title %}Register{% endblock %} {% block content %}
+<div class="row mx-3">
+    <h2 class="text-center">Register</h2>
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-info mt-3">{{ message }}</div>
+    {% endfor %}
+    <form id="signupForm" action="{{ url_for('register') }}" method="POST" novalidate>
+        <div style="position: absolute; left: -9999px">
+            <input type="text" id="user_name" />
+            <input type="password" id="password" />
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <label for="reg_user_name" class="form-label">
+                    Username
+                    <span style="color: red">*</span>
+                </label>
+                <input type="text" class="form-control" name="reg_user_name" value="{{reg_user_name}}" pattern="^[a-zA-Z0-9_]{3,20}$" maxlength="20" required />
+                <div class="invalid-feedback">3-20 chars, letters, numbers, and underscores.</div>
+            </div>
+            <div class="col-md-4">
+                <label for="email" class="form-label">
+                    Email
+                    <span style="color: red">*</span>
+                </label>
+
+                <input type="email" class="form-control" name="email" value="{{email}}" maxlength="320" required />
+                <div class="invalid-feedback">Must contain '@' and a valid domain.</div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <label for="firstname" class="form-label">
+                    First name
+                    <span style="color: red">*</span>
+                </label>
+                <input type="text" class="form-control" value="{{firstname}}" name="firstname" pattern="^[A-Za-z]{2,50}$" maxlength="50" required />
+                <div class="invalid-feedback">2-50 chars, letters only.</div>
+            </div>
+            <div class="col-md-4">
+                <label for="lastname" class="form-label">
+                    Last name
+                    <span style="color: red">*</span>
+                </label>
+                <input type="text" class="form-control" value="{{lastname}}" name="lastname" pattern="^[A-Za-z]{2,50}$" maxlength="50" required />
+                <div class="invalid-feedback">2-50 chars, letters only.</div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <label for="reg_password" class="form-label">
+                    Password
+                    <span style="color: red">*</span>
+                </label>
+                <input
+                    type="password"
+                    maxlength="20"
+                    class="form-control"
+                    id="reg_password"
+                    name="reg_password"
+                    value="{{reg_password}}"
+                    pattern="^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d]{8,20}$"
+                    placeholder="8-20 characters with letters and numbers"
+                    required
+                />
+                <div class="invalid-feedback">Password must be 8-20 characters long and include a mix of letters and numbers.</div>
+            </div>
+            <div class="col-md-4">
+                <label for="confirm_password" class="form-label">
+                    Confirm Password
+                    <span style="color: red">*</span>
+                </label>
+                <input
+                    type="password"
+                    maxlength="20"
+                    class="form-control"
+                    id="confirm_password"
+                    name="confirm_password"
+                    value="{{confirm_password}}"
+                    required
+                />
+                <div class="invalid-feedback">Passwords do not match.</div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <label for="description" class="form-label">Description</label>
+                <input type="text" class="form-control" name="description" value="{{description}}" placeholder="Please talk about yourself:" />
+                <div class="invalid-feedback">Please provide a description.</div>
+            </div>
+
+            <div class="col-md-4">
+                <label for="location" class="form-label">
+                    Location
+                    <span style="color: red">*</span>
+                </label>
+                <input type="text" class="form-control" name="location" value="{{location}}" maxlength="50" required />
+                <div class="invalid-feedback">Required, max 50 chars.</div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <button type="submit" class="btn btn-primary btn-block">Sign up</button>
+            </div>
+        </div>
+    </form>
+    <div class="text-center mt-3">
+        <p>
+            Already have an account?
+            <a href="{{ url_for('login') }}">Log in</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    (function () {
+        "use strict";
+        window.addEventListener("load", function () {
+            var form = document.getElementById("signupForm");
+            form.addEventListener(
+                "submit",
+                function (event) {
+                    const regPassword = document.getElementById("reg_password").value;
+                    const confirmPassword = document.getElementById("confirm_password").value;
+
+                    if (regPassword !== confirmPassword) {
+                        event.preventDefault();
+                        document.getElementById("confirm_password").classList.add("is-invalid");
+                    } else {
+                        document.getElementById("confirm_password").classList.remove("is-invalid");
+                    }
+
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+
+                    form.classList.add("was-validated");
+                },
+                false
+            );
+        });
+    })();
+</script>
+
+{% endblock %}

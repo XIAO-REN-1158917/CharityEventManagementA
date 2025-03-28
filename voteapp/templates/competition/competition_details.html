@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block title %}Detailed Breakdown of {{ competition_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center my-4">Detailed Breakdown of {{ competition_name }}</h1>
+    
+    <table class="table table-striped table-bordered mx-auto">
+        <thead>
+            <tr>
+                <th class="text-center" style="width: 35%;">Competitor Name</th>
+                <th class="text-center">Votes</th>
+                <th class="text-center" style="width: 25%;">Vote Percentage</th>
+                <th class="text-center">Image</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detail in competition_details %}
+            <tr>
+                <td class="text-center" style="width: 35%;">
+                    {% if detail.is_winner %}
+                        <strong>{{ detail.competitor_name }}</strong>
+                    {% else %}
+                        {{ detail.competitor_name }}
+                    {% endif %}
+                    {% if detail.is_winner %}
+                        <span class="ms-2">&#x1F451;</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    {% if detail.is_winner %}
+                        <strong>{{ detail.total_votes }}</strong>
+                    {% else %}
+                        {{ detail.total_votes }}
+                    {% endif %}
+                </td>
+                <td class="text-center" style="width: 25%;">
+                    {% if detail.is_winner %}
+                        <strong>{{ detail.vote_percentage }}%</strong>
+                    {% else %}
+                        {{ detail.vote_percentage }}%
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                        <img src="{{ url_for('static', filename='img/' + detail.image) }}" 
+                            alt="{{ detail.competitor_name }}" 
+                            width="40">
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('competition_results') }}" class="btn btn-secondary" style="width: 200px;">Back</a>
+</div>
+
+</div>
+{% endblock %}

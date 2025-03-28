@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+
+{% block title %}Competition Add{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    {% if flag == "add" %}
+    <h2>Add New Competition</h2>    
+    <form action="/competition_add" method="POST" id="competitionForm">
+    {% else %}
+    <h2>Edit Competition</h2>    
+    <form action="/competition_edit" method="POST" id="competitionForm">
+    <input type="hidden" name="id" value="{{competition.id}}">
+    {% endif %}
+    <div class="row"> 
+        <div class="mb-3 col-md-6">
+            <label for="name" class="form-label">Competition Name</label>
+            <input type="text" class="form-control" id="name" name="name" {% if flag == "edit" %} value="{{competition.name}}" {% endif %} maxlength="100" required>
+        </div>
+    </div>    
+    <div class="row"> 
+        <div class="mb-3 col-md-3">
+            <label for="voting_start_date" class="form-label">Voting Start Date</label>
+            <input type="date" class="form-control" id="voting_start_date" name="voting_start_date" {% if flag == "edit" %} value="{{competition.voting_start_date}}" {% endif %} min="{{current_date}}" required>
+        </div>
+        <div class="mb-3 col-md-3">
+            <label for="voting_end_date" class="form-label">Voting End Date</label>
+            <input type="date" class="form-control" id="voting_end_date" name="voting_end_date" {% if flag == "edit" %} value="{{competition.voting_end_date}}" {% endif %} min="{{current_date}}" required>
+        </div>           
+    </div>     
+    <button type="submit" class="btn btn-primary btn-block">Save</button>  
+
+    </form>
+
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('#competitionForm').on('submit', function(event) {
+            var startDate = new Date($('#voting_start_date').val());
+            var endDate = new Date($('#voting_end_date').val());
+            if (startDate > endDate) {
+                alert('Voting start date must be less than or equal to voting end date.');
+                event.preventDefault(); // Prevent form submission
+            }
+        });
+    });    
+</script>
+
+
+
+{% endblock %}
