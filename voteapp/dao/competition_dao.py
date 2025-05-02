@@ -163,35 +163,73 @@ class CompetitionDao(BaseDAO):
 
         return competition_results
 
-    def competition_details(self, competition_id):
-        """Fetches the detailed results for a specific competition, including
-        competitors and their vote counts.
-        """
-        query = """SELECT comp.id AS competitor_id, comp.name AS competitor_name, cc.vote_count AS total_votes,
-            ROUND ((cc.vote_count / (SELECT SUM(vote_count) FROM competition_competitors 
-            WHERE competition_id = %s)) * 100, 1) AS vote_percentage, comp.image AS image
-            FROM competition_competitors cc
-            JOIN competitors comp ON cc.competitor_id = comp.id WHERE cc.competition_id = %s
-            ORDER BY cc.vote_count DESC"""
+    # def competition_details(self, competition_id):
+    #     """Fetches the detailed results for a specific competition, including
+    #     competitors and their vote counts.
+    #     """
+    #     query = """SELECT comp.id AS competitor_id, comp.name AS competitor_name, cc.vote_count AS total_votes,
+    #         ROUND ((cc.vote_count / (SELECT SUM(vote_count) FROM competition_competitors
+    #         WHERE competition_id = %s)) * 100, 1) AS vote_percentage, comp.image AS image
+    #         FROM competition_competitors cc
+    #         JOIN competitors comp ON cc.competitor_id = comp.id WHERE cc.competition_id = %s
+    #         ORDER BY cc.vote_count DESC"""
 
-        results = self.execute_query(query, (competition_id, competition_id))
+    #     results = self.execute_query(query, (competition_id, competition_id))
+
+    #     competition_details = []
+    #     max_votes = 0
+    #     for row in results:
+    #         detail = {
+    #             "competitor_id": row[0],
+    #             "competitor_name": row[1],
+    #             "total_votes": row[2],
+    #             "vote_percentage": row[3],
+    #             "image": row[4],
+    #         }
+    #         competition_details.append(detail)
+    #         if row[2] > max_votes:
+    #             max_votes = row[2]
+
+    #     for detail in competition_details:
+    #         detail["is_winner"] = detail["total_votes"] == max_votes
+
+    #     return competition_details
+
+    def competition_details(self, competition_id):
+        """
+        Fetches detailed results for a specific competition, including:
+        - Each competitor's vote count
+        - Vote percentage (calculated in Python)
+        - Whether the competitor is the winner
+        """
+        # Step 1: Query all competitors and their vote counts in the competition
+        query = """
+            SELECT comp.id AS competitor_id, comp.name AS competitor_name, 
+                cc.vote_count AS total_votes, comp.image AS image
+            FROM competition_competitors cc
+            JOIN competitors comp ON cc.competitor_id = comp.id 
+            WHERE cc.competition_id = %s
+            ORDER BY cc.vote_count DESC
+        """
+        results = self.execute_query(query, (competition_id,))
 
         competition_details = []
-        max_votes = 0
+        total_votes = sum(row[2] for row in results) if results else 0
+        max_votes = max((row[2] for row in results), default=0)
+
         for row in results:
+            vote_count = row[2]
+            vote_percentage = round((vote_count / total_votes)
+                                    * 100, 1) if total_votes > 0 else 0.0
             detail = {
                 "competitor_id": row[0],
                 "competitor_name": row[1],
-                "total_votes": row[2],
-                "vote_percentage": row[3],
-                "image": row[4],
+                "total_votes": vote_count,
+                "vote_percentage": vote_percentage,
+                "image": row[3],
+                "is_winner": vote_count == max_votes
             }
             competition_details.append(detail)
-            if row[2] > max_votes:
-                max_votes = row[2]
-
-        for detail in competition_details:
-            detail["is_winner"] = detail["total_votes"] == max_votes
 
         return competition_details
 
