@@ -13,6 +13,10 @@ class CompetitionDao(BaseDAO):
         super().__init__()
 
     def current_competition(self, status) -> List[Competition]:
+        """
+        Returns a list of current competitions with the given status,
+        each with their associated competitors.
+        """
         query = "SELECT * FROM competitions WHERE status = %s"
         current_competition = []
         result = self.execute_query(query, (status,))
@@ -55,6 +59,9 @@ class CompetitionDao(BaseDAO):
         return None
 
     def get_competitor_details(self, competitor_id) -> CompetitionCompetitor:
+        """
+        Returns a tuple of (CompetitionCompetitor, Competitor) for the given competitor ID.
+        """
         query = """
             SELECT cc.competition_id, c.id, c.name, c.description, c.image, cc.vote_count, cc.vote_ratio, cc.is_winner
             FROM competitors c
@@ -80,27 +87,79 @@ class CompetitionDao(BaseDAO):
             return competition_competitor, competitor
         return None, None
 
+    # def all_finalized_competition_results(self) -> list:
+    #     """
+    #     Fetches the results for all finalized competitions, including the total votes
+    #     and winner information.
+    #     """
+    #     query = """SELECT c.id AS competition_id, c.name AS competition_name, comp.name AS competitor_name,
+    #                 (SELECT SUM(cc2.vote_count) FROM competition_competitors cc2 WHERE cc2.competition_id = c.id) AS total_votes,
+    #                 ROUND((cc.vote_count / (SELECT SUM(cc2.vote_count) FROM competition_competitors cc2
+    #                 WHERE cc2.competition_id = c.id)) * 100, 1) AS winner_votes_proportion
+    #                 FROM competition_competitors cc JOIN competitions c ON cc.competition_id = c.id
+    #                 JOIN competitors comp ON cc.competitor_id = comp.id WHERE c.status = 'published'
+    #                 AND cc.is_winner = 1 ORDER BY c.voting_end_date DESC, c.name, cc.vote_count DESC;"""
+
+    #     results = self.execute_query(query)
+
+    #     competition_results = []
+    #     for row in results:
+    #         competitionresult = CompetitionResult(
+    #             row[0], row[1], row[2], row[3], row[4]
+    #         )
+    #         competition_results.append(competitionresult)
+
+    #     return competition_results
+
+    # Refactor: move vote calculation logic from SQL to Python for better efficiency and readability
+
     def all_finalized_competition_results(self) -> list:
         """
-        Fetches the results for all finalized competitions, including the total votes
-        and winner information.
+        Fetches the results for all finalized (published) competitions,
+        including the total votes and winner information.
+        Calculates vote percentage in Python instead of SQL for better control.
         """
-        query = """SELECT c.id AS competition_id, c.name AS competition_name, comp.name AS competitor_name,
-                    (SELECT SUM(cc2.vote_count) FROM competition_competitors cc2 WHERE cc2.competition_id = c.id) AS total_votes,
-                    ROUND((cc.vote_count / (SELECT SUM(cc2.vote_count) FROM competition_competitors cc2 
-                    WHERE cc2.competition_id = c.id)) * 100, 1) AS winner_votes_proportion
-                    FROM competition_competitors cc JOIN competitions c ON cc.competition_id = c.id
-                    JOIN competitors comp ON cc.competitor_id = comp.id WHERE c.status = 'published'
-                    AND cc.is_winner = 1 ORDER BY c.voting_end_date DESC, c.name, cc.vote_count DESC;"""
-
-        results = self.execute_query(query)
+        # Step 1: Get all published competitions
+        competition_query = "SELECT id, name FROM competitions WHERE status = 'published'"
+        competition_rows = self.execute_query(competition_query)
 
         competition_results = []
-        for row in results:
-            competitionresult = CompetitionResult(
-                row[0], row[1], row[2], row[3], row[4]
-            )
-            competition_results.append(competitionresult)
+
+        for comp_id, comp_name in competition_rows:
+            # Step 2: Get all competitors for this competition who are marked as winners
+            winner_query = """
+                SELECT comp.name, cc.vote_count
+                FROM competition_competitors cc
+                JOIN competitors comp ON cc.competitor_id = comp.id
+                WHERE cc.competition_id = %s AND cc.is_winner = 1
+            """
+            winner_rows = self.execute_query(winner_query, (comp_id,))
+
+            # Step 3: Get total vote count for this competition
+            total_votes_query = """
+                SELECT SUM(vote_count)
+                FROM competition_competitors
+                WHERE competition_id = %s
+            """
+            total_votes_result = self.execute_query(
+                total_votes_query, (comp_id,))
+            total_votes = total_votes_result[0][0] if total_votes_result and total_votes_result[0][0] else 0
+
+            # Step 4: Build result objects
+            for competitor_name, vote_count in winner_rows:
+                if total_votes == 0:
+                    vote_ratio = 0.0
+                else:
+                    vote_ratio = round((vote_count / total_votes) * 100, 1)
+
+                result = CompetitionResult(
+                    competition_id=comp_id,
+                    competition_name=comp_name,
+                    competitor_name=competitor_name,
+                    total_votes=total_votes,
+                    winner_votes_proportion=vote_ratio
+                )
+                competition_results.append(result)
 
         return competition_results
 
@@ -193,9 +252,14 @@ class CompetitionDao(BaseDAO):
 
     def edit_competition(self, id, name, voting_start_date, voting_end_date):
         query = "update competitions set name=%s, voting_start_date=%s, voting_end_date=%s where id = %s"
-        self.execute_non_query(query, (name, voting_start_date, voting_end_date, id))
+        self.execute_non_query(
+            query, (name, voting_start_date, voting_end_date, id))
 
     def launch_competition(self, id):
+        """
+        Launches a competition if no other ongoing competition exists.
+        Returns a tuple (success: bool, message: str).
+        """
         query = "select * from competitions where status = 'ongoing'"
         result = self.execute_query(query)
         if len(result) > 0:
@@ -211,7 +275,7 @@ class CompetitionDao(BaseDAO):
                 competition.name
             )
 
-    # 新增dao
+    # new dao
     def add_competitor_to_competition(
         self,
         competition_id: int,
@@ -225,7 +289,8 @@ class CompetitionDao(BaseDAO):
         VALUES (%s, %s, %s, %s, %s)
         """
         self.execute_non_query(
-            query, (competition_id, competitor_id, vote_count, vote_ratio, is_winner)
+            query, (competition_id, competitor_id,
+                    vote_count, vote_ratio, is_winner)
         )
 
     def get_competitors_by_competition(
@@ -264,6 +329,9 @@ class CompetitionDao(BaseDAO):
         self.execute_non_query(query, (competition_id, competitor_id))
 
     def update_status_for_expired_competitions(self):
+        """
+        Automatically sets the status of competitions to 'ended' if their voting_end_date has passed.
+        """
         current_date = datetime.now().date()
         sql = """
             UPDATE competitions
