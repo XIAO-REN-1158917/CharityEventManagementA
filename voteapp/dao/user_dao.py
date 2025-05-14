@@ -15,7 +15,8 @@ class UserDao(BaseDAO):
             " from users where username = %s and password_hash = %s"
         )
 
-        result = self.execute_query(query, (user_name, get_password_hash(password)))
+        result = self.execute_query(
+            query, (user_name, get_password_hash(password)))
         if len(result) > 0:
             user = User(
                 result[0][0],
@@ -67,7 +68,6 @@ class UserDao(BaseDAO):
             "User '" + user.username + "' registered successfully, please log in.",
         )
 
-    # update by nan
     def search_voters(self, search_criteria):
         query = """
             SELECT id, username, email, first_name, last_name, location, description, avatar, role, status 
@@ -147,11 +147,11 @@ class UserDao(BaseDAO):
                 location=user_data[6],
                 description=user_data[7],
                 avatar=user_data[8],
-                role=enums.Role(user_data[9]), 
+                role=enums.Role(user_data[9]),
                 status=enums.Status(user_data[10])
             )
         return None
-    
+
     def find_by_id(self, user_id):
         query = "select id, username, password_hash, email, first_name, last_name, location, description, avatar, role, status from users where id = %s"
         result = self.execute_query(query, (user_id,))
@@ -167,11 +167,12 @@ class UserDao(BaseDAO):
                 location=user_data[6],
                 description=user_data[7],
                 avatar=user_data[8],
-                role=enums.Role(user_data[9]),  # Ensure enums.Role and enums.Status are correct
+                # Ensure enums.Role and enums.Status are correct
+                role=enums.Role(user_data[9]),
                 status=enums.Status(user_data[10])
             )
         return None
-    
+
     def update_user(self, user: User):
         query = (
             "update users set username = %s, password_hash = %s, email = %s, first_name = %s, last_name = %s, "
@@ -193,7 +194,7 @@ class UserDao(BaseDAO):
                 user.id,
             ),
         )
-                                                                            
+
     def search_backend_user(self, username, first_name, last_name, exclude_user=None) -> list[User]:
         query = """
             SELECT id, username, email, first_name, last_name, role, status 
@@ -240,7 +241,7 @@ class UserDao(BaseDAO):
             user_list.append(user)
 
         return user_list
-    
+
     def update_role(self, user_id, role: enums.Role):
         query = "UPDATE users SET role = %s WHERE id = %s"
         self.execute_non_query(query, (role.value, user_id))
@@ -248,10 +249,11 @@ class UserDao(BaseDAO):
     def update_status(self, user_id, status: enums.Status):
         query = "UPDATE users SET status = %s WHERE id = %s"
         self.execute_non_query(query, (status.value, user_id))
-        
+
     def backend_user_add(self):
         # Generate unique username, email, and other default values
-        last_user = self.execute_query("SELECT MAX(id) FROM users", ())[0][0] or 0
+        last_user = self.execute_query(
+            "SELECT MAX(id) FROM users", ())[0][0] or 0
         username = f"backend_user_{last_user + 1}"
         email = f"{username}@example.com"
         password_hash = get_password_hash("backenduser1pass")
@@ -267,16 +269,17 @@ class UserDao(BaseDAO):
             "INSERT INTO users (username, password_hash, email, first_name, last_name, description, location, avatar, role, status)"
             " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         )
-        
+
         try:
             self.execute_non_query(
                 query,
-                (username, password_hash, email, first_name, last_name, description, location, avatar, role, status)
+                (username, password_hash, email, first_name, last_name,
+                 description, location, avatar, role, status)
             )
             return True, f"Backend user '{username}' created successfully."
         except Exception as e:
             return False, f"Failed to create backend user: {str(e)}"
-        
+
     def update_backend_user(self, user_id, username=None, email=None, first_name=None, last_name=None, location=None, description=None):
         query = "UPDATE users SET "
         params = []
@@ -325,7 +328,7 @@ class UserDao(BaseDAO):
                 location=user_data[6],
                 description=user_data[7],
                 avatar=user_data[8],
-                role=enums.Role(user_data[9]),  
+                role=enums.Role(user_data[9]),
                 status=enums.Status(user_data[10])
             )
         return None
